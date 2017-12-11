@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deviceplugin-provider spec-path="jp_meganetaaan_deviceconnect_plugin_sjcam/api">
+
+    <profile name="battery" />
+    <profile name="canvas" />
+    <profile name="deviceOrientation" />
+    <profile name="mediaStreamRecording" />
+
+    <profile name="serviceDiscovery" />
+    <profile name="serviceInformation" />
+    <profile name="system" />
+
+</deviceplugin-provider>

@@ -19,6 +19,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jp.meganetaaan.deviceconnect.plugin.sjcam.sjcam.SjcamDevice;
+import jp.meganetaaan.deviceconnect.plugin.sjcam.sjcam.SjcamDeviceManager;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -478,62 +480,39 @@ public class MyMediaStreamRecordingProfile extends DConnectProfile {
     private boolean onPostRecord(final Intent request, final Intent response) {
         String serviceId = (String) request.getExtras().get("serviceId");
         String target = (String) request.getExtras().get("target");
-
-        // TODO: hide http access
-        // TODO: make async
-        String url = "http://192.168.1.254/?custom=1&cmd=2001&par=1";
-        OkHttpClient client = new OkHttpClient();
-
-        Request req = new Request.Builder().url(url).build();
+        SjcamDevice sjcamDevice = SjcamDeviceManager.getSjcamDevice();
         try {
-            Response res = client.newCall(req).execute();
-            ResponseBody body = res.body();
+            sjcamDevice.startRecording();
             setResult(response, DConnectMessage.RESULT_OK);
-            return true;
-        } catch(IOException e) {
+        } catch (Exception e) {
             MessageUtils.setInvalidRequestParameterError(response);
-            return true;
         }
+        return true;
     }
 
     private boolean onPutStop(final Intent request, final Intent response) {
         String serviceId = (String) request.getExtras().get("serviceId");
         String target = (String) request.getExtras().get("target");
-
-        // TODO: hide http access
-        // TODO: make async
-        String url = "http://192.168.1.254/?custom=1&cmd=2001&par=0";
-        OkHttpClient client = new OkHttpClient();
-
-        Request req = new Request.Builder().url(url).build();
+        SjcamDevice sjcamDevice = SjcamDeviceManager.getSjcamDevice();
         try {
-            Response res = client.newCall(req).execute();
-            ResponseBody body = res.body();
+            sjcamDevice.stopRecording();
             setResult(response, DConnectMessage.RESULT_OK);
-            return true;
-        } catch(IOException e) {
+        } catch (Exception e) {
             MessageUtils.setInvalidRequestParameterError(response);
-            return true;
         }
+        return true;
     }
 
     private boolean onPostTakePhoto(final Intent request, final Intent response) {
         String serviceId = (String) request.getExtras().get("serviceId");
         String target = (String) request.getExtras().get("target");
-
-        // TODO: hide http access
-        String url = "http://192.168.1.254/?custom=1&cmd=1001";
-        OkHttpClient client = new OkHttpClient();
-
-        Request req = new Request.Builder().url(url).build();
+        SjcamDevice sjcamDevice = SjcamDeviceManager.getSjcamDevice();
         try {
-            Response res = client.newCall(req).execute();
-            ResponseBody body = res.body();
+            sjcamDevice.takePhoto();
             setResult(response, DConnectMessage.RESULT_OK);
-            return true;
-        } catch(IOException e) {
+        } catch (Exception e) {
             MessageUtils.setInvalidRequestParameterError(response);
-            return true;
         }
+        return true;
     }
 }

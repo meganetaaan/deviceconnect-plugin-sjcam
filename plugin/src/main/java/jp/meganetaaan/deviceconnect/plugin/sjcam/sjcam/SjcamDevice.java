@@ -21,10 +21,20 @@ public class SjcamDevice {
     private final static String TAG = SjcamDevice.class.getSimpleName();
     public enum CameraMode {
         PHOTO(0),
-        VIDEO(1);
+        VIDEO(1),
+        TIMELAPSE_VIDEO(2),
+        TIMELAPSE_PHOTO(3);
 
         private final int code;
         private CameraMode(final int code) { this.code = code; }
+        public static CameraMode getCameraMode(int i) {
+            for(CameraMode mode : CameraMode.values()) {
+                if (mode.getCode() == i) {
+                    return mode;
+                }
+            }
+            return null;
+        }
 
         public int getCode() { return this.code; }
     }
@@ -32,10 +42,19 @@ public class SjcamDevice {
     public enum Command {
         TAKE_PHOTO(1001),
         RECORD_VIDEO(2001),
-        SET_CAMERA_MODE(3001);
+        SET_CAMERA_MODE(3001),
+        GET_CAMERA_MODE(3016);
 
         private final int code;
         private Command(final int code) { this.code = code; }
+        public static Command getCommand(int code) {
+            for(Command cmd : Command.values()) {
+                if (cmd.getCode() == code) {
+                    return cmd;
+                }
+            }
+            return null;
+        }
         public int getCode() {return this.code; }
     }
 
@@ -69,11 +88,13 @@ public class SjcamDevice {
     }
 
     public int setCameraMode (CameraMode mode) {
-        return 0;
+        int result = executeCommand(Command.SET_CAMERA_MODE);
+        return result;
     }
 
     public CameraMode getCameraMode () {
-        return CameraMode.PHOTO;
+        int result = executeCommand(Command.GET_CAMERA_MODE);
+        return CameraMode.getCameraMode(result);
     }
 
     public int takePhoto () {
@@ -90,6 +111,8 @@ public class SjcamDevice {
         int result = executeCommand(Command.RECORD_VIDEO, 0);
         return result;
     }
+
+
 
     public int getPowerStatus () {
         return 0;

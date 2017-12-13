@@ -82,12 +82,12 @@ public class SjcamDevice {
     }
 
     public int startRecording () {
-        int result = executeCommand(Command.RECORD_VIDEO, 0);
+        int result = executeCommand(Command.RECORD_VIDEO, 1);
         return result;
     }
 
     public int stopRecording () {
-        int result = executeCommand(Command.RECORD_VIDEO, 1);
+        int result = executeCommand(Command.RECORD_VIDEO, 0);
         return result;
     }
 
@@ -96,15 +96,14 @@ public class SjcamDevice {
     }
 
     private int executeCommand(Command cmd) {
-        Log.i(TAG, "executeCommand");
         String url = new StringBuilder()
                 .append(BASE_URL)
                 .append("&cmd=")
                 .append(cmd.getCode()).toString();
-        Log.i(TAG, "executeCommand: " + url);
         try {
             sendRequest(url);
         } catch(IOException e) {
+            Log.e(TAG, e.getMessage());
             throw new RuntimeException(e);
         }
         return 0;
@@ -117,18 +116,17 @@ public class SjcamDevice {
                 .append(cmd.getCode())
                 .append("&par=")
                 .append(par).toString();
-        Log.i(TAG, "executeCommand: " + url);
         try {
             // TODO: parse and return response
             sendRequest(url);
         } catch(IOException e) {
+            Log.e(TAG, e.getMessage());
             throw new RuntimeException(e);
         }
         return 0;
     }
 
     private int executeCommand(Command cmd, String str) {
-        Log.i(TAG, "executeCommand");
         String url = new StringBuilder()
                 .append(BASE_URL)
                 .append("&cmd=")
@@ -138,12 +136,14 @@ public class SjcamDevice {
         try {
             sendRequest(url);
         } catch(IOException e) {
+            Log.e(TAG, e.getMessage());
             throw new RuntimeException(e);
         }
         return 0;
     }
 
     private Response sendRequest(String url) throws IOException {
+        Log.i(TAG, "sendRequest: " + url);
         Request req = new Request.Builder().url(url).build();
         Response res = this.client.newCall(req).execute();
         return res;

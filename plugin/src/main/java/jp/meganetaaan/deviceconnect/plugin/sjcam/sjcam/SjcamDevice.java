@@ -49,8 +49,12 @@ public class SjcamDevice {
                 Matcher commandMatcher = Pattern.compile(COMMAND_REGEX).matcher(bodyStr);
                 Matcher regexMatcher = Pattern.compile(STATUS_REGEX).matcher(bodyStr);
 
-                this.command = Command.getCommand(Integer.parseInt(commandMatcher.group(1)));
-                this.status = Integer.parseInt(regexMatcher.group(1));
+                if(commandMatcher.find()) {
+                    this.command = Command.getCommand(Integer.parseInt(commandMatcher.group(1)));
+                }
+                if(regexMatcher.find()) {
+                    this.status = Integer.parseInt(regexMatcher.group(1));
+                }
                 this.response = response;
             } catch (IOException e) {
                 e.printStackTrace();

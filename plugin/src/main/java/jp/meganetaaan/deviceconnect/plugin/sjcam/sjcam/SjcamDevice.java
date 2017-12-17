@@ -5,6 +5,9 @@ import org.deviceconnect.android.message.MessageUtils;
 import org.deviceconnect.message.DConnectMessage;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import android.util.Log;
 
 import jp.meganetaaan.deviceconnect.plugin.sjcam.sjcam.OkHttpManager;
@@ -19,6 +22,42 @@ import okhttp3.ResponseBody;
 
 public class SjcamDevice {
     private final static String TAG = SjcamDevice.class.getSimpleName();
+    private final static String STATUS_REGEX = "<Status>(.+)</Status>";
+    private final static String COMMAND_REGEX = "<Cmd>(.+)</Cmd>";
+    private class Result {
+        private Command command;
+        private int status;
+
+        public Command getCommand() {
+            return command;
+        }
+
+        public int getStatus() {
+            return status;
+        }
+
+        public Response getResponse() {
+            return response;
+        }
+
+        private Response response; // TODO: wrap
+
+        public Result(Response response) {
+            try {
+                String bodyStr = response.body().string();
+                Log.d(TAG, "bodyStr: " + bodyStr);
+                Matcher commandMatcher = Pattern.compile(COMMAND_REGEX).matcher(bodyStr);
+                Matcher regexMatcher = Pattern.compile(STATUS_REGEX).matcher(bodyStr);
+
+                this.command = Command.getCommand(Integer.parseInt(commandMatcher.group(1)));
+                this.status = Integer.parseInt(regexMatcher.group(1));
+                this.response = response;
+            } catch (IOException e) {
+                e.printStackTrace();
+                // TODO: error handling
+            }
+        }
+    }
     public enum CameraMode {
         PHOTO(0),
         VIDEO(1),
@@ -88,51 +127,58 @@ public class SjcamDevice {
     }
 
     public int setCameraMode (CameraMode mode) {
-        int result = executeCommand(Command.SET_CAMERA_MODE);
-        return result;
+        int code = mode.getCode();
+        Result result = executeCommand(Command.SET_CAMERA_MODE, code);
+        return result.getStatus();
     }
 
     public CameraMode getCameraMode () {
-        int result = executeCommand(Command.GET_CAMERA_MODE);
-        return CameraMode.getCameraMode(result);
+        Result result = executeCommand(Command.GET_CAMERA_MODE);
+        return CameraMode.getCameraMode(result.getStatus());
     }
 
     public int takePhoto () {
-        int result = executeCommand(Command.TAKE_PHOTO);
-        return result;
+
+        if(getCameraMode() != CameraMode.PHOTO) {
+            setCameraMode(CameraMode.PHOTO);
+        }
+        Result result = executeCommand(Command.TAKE_PHOTO);
+        // TODO: takePhoto result enum
+        return result.getStatus();
     }
 
     public int startRecording () {
-        int result = executeCommand(Command.RECORD_VIDEO, 1);
-        return result;
+        if(getCameraMode() != CameraMode.VIDEO) {
+            setCameraMode(CameraMode.VIDEO);
+        }
+        Result result = executeCommand(Command.RECORD_VIDEO, 1);
+        return result.getStatus();
     }
 
     public int stopRecording () {
-        int result = executeCommand(Command.RECORD_VIDEO, 0);
-        return result;
+        Result result = executeCommand(Command.RECORD_VIDEO, 0);
+        return result.getStatus();
     }
-
-
 
     public int getPowerStatus () {
         return 0;
     }
 
-    private int executeCommand(Command cmd) {
+    private Result executeCommand(Command cmd) {
         String url = new StringBuilder()
                 .append(BASE_URL)
                 .append("&cmd=")
                 .append(cmd.getCode()).toString();
         try {
-            sendRequest(url);
+            Response res = sendRequest(url);
+            return new Result(res);
         } catch(IOException e) {
             Log.e(TAG, e.getMessage());
             throw new RuntimeException(e);
         }
-        return 0;
     }
 
-    private int executeCommand(Command cmd, int par) {
+    private Result executeCommand(Command cmd, int par) {
         String url = new StringBuilder()
                 .append(BASE_URL)
                 .append("&cmd=")
@@ -140,16 +186,15 @@ public class SjcamDevice {
                 .append("&par=")
                 .append(par).toString();
         try {
-            // TODO: parse and return response
-            sendRequest(url);
+            Response res = sendRequest(url);
+            return new Result(res);
         } catch(IOException e) {
             Log.e(TAG, e.getMessage());
             throw new RuntimeException(e);
         }
-        return 0;
     }
 
-    private int executeCommand(Command cmd, String str) {
+    private Result executeCommand(Command cmd, String str) {
         String url = new StringBuilder()
                 .append(BASE_URL)
                 .append("&cmd=")
@@ -157,12 +202,12 @@ public class SjcamDevice {
                 .append("&str=")
                 .append(str).toString();
         try {
-            sendRequest(url);
+            Response res = sendRequest(url);
+            return new Result(res);
         } catch(IOException e) {
             Log.e(TAG, e.getMessage());
             throw new RuntimeException(e);
         }
-        return 0;
     }
 
     private Response sendRequest(String url) throws IOException {

@@ -1,6 +1,7 @@
 package jp.meganetaaan.deviceconnect.plugin.sjcam.profiles;
 
 import android.content.Intent;
+import android.util.Log;
 
 import org.deviceconnect.android.event.Event;
 import org.deviceconnect.android.event.EventError;
@@ -482,9 +483,15 @@ public class MyMediaStreamRecordingProfile extends DConnectProfile {
         String target = (String) request.getExtras().get("target");
         SjcamDevice sjcamDevice = SjcamDeviceManager.getSjcamDevice();
         try {
-            sjcamDevice.startRecording();
-            setResult(response, DConnectMessage.RESULT_OK);
+            int status = sjcamDevice.startRecording();
+            if (status == 0) {
+                setResult(response, DConnectMessage.RESULT_OK);
+            } else {
+                setResult(response, DConnectMessage.RESULT_ERROR);
+            }
         } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("SjcamDevice",e.getMessage());
             MessageUtils.setInvalidRequestParameterError(response);
         }
         return true;
